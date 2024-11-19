@@ -151,9 +151,6 @@ void Slider::handleEvent(const sf::Event& event, const sf::RenderWindow& window)
         m_background.setOutlineColor(m_hoverColor);
         m_titleText.setFillColor(m_hoverColor);
         m_valueText.setFillColor(m_hoverColor);
-
-        // m_background.setFillColor(m_hoverColor);
-        // m_handle.setFillColor(mouseHoveringHandle ? m_hoverColor : m_handleColor);
     }
     else
     {
@@ -161,23 +158,96 @@ void Slider::handleEvent(const sf::Event& event, const sf::RenderWindow& window)
         m_background.setOutlineColor(sf::Color::Transparent);
         m_titleText.setFillColor(m_textColor);
         m_valueText.setFillColor(m_textColor);
-
-        // m_background.setFillColor(m_backgroundColor);
-        // m_handle.setFillColor(m_handleColor);
     }
 
-
+    // Handle mouse click events
     if (event.type == sf::Event::MouseButtonPressed)
     {
         if (event.mouseButton.button == sf::Mouse::Left)
         {
-            sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-
-            // Check if the knob was clicked
-            if (m_handle.getGlobalBounds().contains(mousePos))
+            // Check if the handle was clicked
+            if (mouseHoveringHandle)
             {
                 m_dragging = true;
             }
+            // Check if the background was clicked
+            else if (mouseHoveringBackground)
+            {
+                m_dragging = true;
+
+                // Calculate new handle position and value based on mouse position
+                float new_position = m_isHorizontal
+                    ? std::clamp(mousePos.x, m_position.x, m_position.x + m_width)
+                    : std::clamp(mousePos.y, m_position.y, m_position.y + m_height);
+
+                m_handle.setPosition(
+                    m_isHorizontal ? new_position : m_handle.getPosition().x,
+                    m_isHorizontal ? m_handle.getPosition().y : new_position
+                );
+
+                // Update the slider value
+                float handle_position = m_isHorizontal
+                    ? (m_handle.getPosition().x - m_position.x)
+                    : (m_handle.getPosition().y - m_position.y);
+
+                float normalized_position = m_isHorizontal
+                    ? handle_position / m_width
+                    : (m_height - handle_position) / m_height;
+
+                float new_value = m_minValue + normalized_position * (m_maxValue - m_minValue);
+
+                // Snap the new value to the nearest step
+                new_value = std::round(new_value / m_step) * m_step;
+
+                // Ensure the value stays within bounds
+                new_value = std::clamp(new_value, m_minValue, m_maxValue);
+
+                m_value = new_value;
+                setValue(m_value);
+            }
+        }
+    }
+
+    if (event.type == sf::Event::MouseButtonPressed && 
+        event.mouseButton.button == sf::Mouse::Left)
+    {
+        // check if handle was clicked
+        if (mouseHoveringHandle)
+        {
+            m_dragging = true;
+        }
+        // check if background was clicked
+        else if (mouseHoveringBackground)
+        {
+            m_dragging = true;
+
+            // calculate new handle position and value based on mouse position
+            float new_position = m_isHorizontal
+                ? std::clamp(mousePos.x, m_position.x, m_position.x + m_width)
+                : std::clamp(mousePos.y, m_position.y, m_position.y + m_height);
+
+            m_handle.setPosition(
+                m_isHorizontal ? new_position : m_handle.getPosition().x,
+                m_isHorizontal ? m_handle.getPosition().y : new_position
+            );
+
+            // update slider value
+            float handle_position = m_isHorizontal
+                ? (m_handle.getPosition().x - m_position.x)
+                : (m_handle.getPosition().y - m_position.y);
+
+            float normalized_position = m_isHorizontal
+                ? handle_position / m_width
+                : (m_height - handle_position) / m_height;
+
+            float new_value = m_minValue + normalized_position * (m_maxValue - m_minValue);
+
+            new_value = std::round(new_value / m_step) * m_step;
+
+            new_value = std::clamp(new_value, m_minValue, m_maxValue);
+
+            m_value = new_value;
+            setValue(m_value);
         }
     }
 
@@ -198,8 +268,10 @@ void Slider::handleEvent(const sf::Event& event, const sf::RenderWindow& window)
         ? std::clamp(mouse_position.x, m_position.x, m_position.x + m_width)
         : std::clamp(mouse_position.y, m_position.y, m_position.y + m_height);
         
-        m_handle.setPosition(m_isHorizontal ? new_position : m_handle.getPosition().x,
-                                m_isHorizontal ? m_handle.getPosition().y : new_position);
+        m_handle.setPosition(
+            m_isHorizontal ? new_position : m_handle.getPosition().x,
+            m_isHorizontal ? m_handle.getPosition().y : new_position
+        );
 
         // Update the value based on the knob's position
         float handle_position = m_isHorizontal
