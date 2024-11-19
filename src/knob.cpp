@@ -25,6 +25,8 @@ Knob::Knob(KnobType type, float min, float max, float init_value, float radius, 
     m_padding = theme.getSmallPadding();
     m_knobColor = theme.getPrimaryColor();
     m_indicatorColor = theme.getSecondaryColor();
+    m_textColor = theme.getPrimaryColor();
+    m_hoverColor = theme.getHoverColor();
 
     // initialize the knob circle
     m_knob.setRadius(radius);
@@ -43,19 +45,16 @@ Knob::Knob(KnobType type, float min, float max, float init_value, float radius, 
     m_font = theme.getFont();
 
     m_valueText.setCharacterSize(theme.getLabelSize());
-    m_valueText.setFillColor(theme.getPrimaryColor());
+    m_valueText.setFillColor(m_textColor);
     m_valueText.setFont(m_font);
     positionValueText(init_value);
 
     m_titleText.setString(label);
     m_titleText.setCharacterSize(theme.getTitleSize());
-    m_titleText.setFillColor(theme.getPrimaryColor());
+    m_titleText.setFillColor(m_textColor);
     m_titleText.setFont(m_font);
     positionTitle();
 }
-
-
-
 
 
 Knob::Knob(float x, float y, float radius, float min, float max, float init_position, const std::string& label)
@@ -74,6 +73,7 @@ Knob::Knob(float x, float y, float radius, float min, float max, float init_posi
     m_padding = theme.getSmallPadding();
     m_knobColor = theme.getPrimaryColor();
     m_indicatorColor = theme.getSecondaryColor();
+    m_hoverColor = theme.getHoverColor();
 
     // initialize the knob circle
     m_knob.setRadius(radius);
@@ -113,21 +113,46 @@ Knob::Knob(float x, float y, float radius, float min, float max, float init_posi
 }
 
 
-
-
-
-
-
 void Knob::handleEvent(const sf::Event& event, const sf::RenderWindow& window)
 {
-    sf::Vector2f mousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+/*
+    if (m_isDisabled)
+    {
+        // m_knob.setFillColor(m_disabledColor);
+        // m_indicator.setFillColor(m_disabledColor);
+        // m_titleText.setFillColor(m_disabledColor);
+        // m_valueText.setFillColor(sf::Color::Transparent);
+
+        return;
+    }
+*/
+
+    // Get mouse position
+    sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+    bool mouseHovering = m_knob.getGlobalBounds().contains(mousePos);
+
+    if (mouseHovering)
+    {
+        m_knob.setOutlineThickness(2.f);
+        m_knob.setOutlineColor(m_hoverColor);
+        m_titleText.setFillColor(m_hoverColor);
+        m_valueText.setFillColor(m_hoverColor);
+    }
+    else
+    {
+        m_knob.setOutlineThickness(0.f);
+        m_knob.setOutlineColor(sf::Color::Transparent);
+        m_titleText.setFillColor(m_textColor);
+        m_valueText.setFillColor(m_textColor);
+    }
 
     if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
     {
-        if (m_knob.getGlobalBounds().contains(mousePosition))
+        if (m_knob.getGlobalBounds().contains(mousePos))
         {
             m_isTurning = true;
-            m_previousMousePosition = mousePosition;
+            m_previousMousePosition = mousePos;
         }
     }
     else if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
@@ -137,10 +162,10 @@ void Knob::handleEvent(const sf::Event& event, const sf::RenderWindow& window)
     else if (event.type == sf::Event::MouseMoved && m_isTurning)
     {
         // Compute the change in mouse Y movement
-        float delta_y = m_previousMousePosition.y - mousePosition.y; // Positive for upward movement
+        float delta_y = m_previousMousePosition.y - mousePos.y; // Positive for upward movement
         
         // Store current mouse position for next frame comparison
-        m_previousMousePosition = mousePosition;
+        m_previousMousePosition = mousePos;
 
         // Map deltaY to a value change
         float range = m_maxValue - m_minValue;
@@ -157,10 +182,6 @@ void Knob::handleEvent(const sf::Event& event, const sf::RenderWindow& window)
         positionValueText(m_value);
     }
 }
-
-
-
-
 
 
 
@@ -279,7 +300,7 @@ void Knob::setDisabledColor(sf::Color color)
 void Knob::setDisabled(bool disabled)
 {
     m_isDisabled = disabled;
-    m_knob.setFillColor(m_isDisabled ? m_disabledColor : m_knobColor);
+    // m_knob.setFillColor(m_isDisabled ? m_disabledColor : m_knobColor);
 }
 bool Knob::isHovered() const
 {

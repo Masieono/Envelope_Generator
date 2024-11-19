@@ -64,9 +64,10 @@ class Knob
 
         sf::Color m_knobColor;
         sf::Color m_indicatorColor;
+        sf::Color m_textColor;
         sf::Color m_hoverColor;
-        sf::Color m_disabledColor = sf::Color(100, 100, 100);
-        sf::Color m_borderColor = sf::Color::Transparent;
+        sf::Color m_disabledColor;
+        sf::Color m_borderColor;
 
         bool m_isTurning;
         bool m_isHovered;
