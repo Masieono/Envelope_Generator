@@ -7,7 +7,7 @@
 #include "theme.hpp"
 #include "slider.hpp"
 
-// for envelope generator, still needs adjust
+// for envelope generator
 Slider::Slider(float minValue, float maxValue, const std::string& title)
 : m_position(0.f, 0.f)
 , m_width(150.f)
@@ -17,32 +17,40 @@ Slider::Slider(float minValue, float maxValue, const std::string& title)
 , m_value(minValue)
 , m_dragging(false)
 , m_step(0.01f)
-, m_isHorizontal(true) 
+, m_isHorizontal(true)
+, m_isDisabled(false) 
 {
+    // Retrieve theme elements
     Theme& theme = Theme::getInstance();
 
     m_padding = theme.getSmallPadding();
+    m_backgroundColor = theme.getPrimaryColor();
+    m_handleColor = theme.getSecondaryColor();
+
+    m_font = theme.getFont();
+    m_textColor = theme.getPrimaryColor();
+    m_disabledColor = theme.getDisabledColor();
+    m_hoverColor = theme.getHoverColor();
 
     // Slider track
     m_background.setSize(sf::Vector2f(m_width, m_padding / 2));
-    m_background.setFillColor(theme.getPrimaryColor());
+    m_background.setFillColor(m_backgroundColor);
 
     // initialize slider handle
     m_handle.setRadius(m_padding / 2);
     m_handle.setOrigin(m_handle.getRadius(), m_handle.getRadius());
-    m_handle.setFillColor(theme.getSecondaryColor());
-    
+    m_handle.setFillColor(m_handleColor);
 
     // initialize text elements
-    m_font = theme.getFont();
-
     m_titleText.setString(title);
     m_titleText.setCharacterSize(theme.getTitleSize());
-    m_titleText.setFillColor(theme.getPrimaryColor());
+    m_titleText.setFillColor(m_textColor);
+    // m_titleText.setFillColor(theme.getPrimaryColor());
     m_titleText.setFont(m_font);
 
     m_valueText.setCharacterSize(theme.getLabelSize());
-    m_valueText.setFillColor(theme.getPrimaryColor());
+    m_valueText.setFillColor(m_textColor);
+    // m_valueText.setFillColor(theme.getPrimaryColor());
     m_valueText.setFont(m_font);
 
     updateTitleText();
@@ -117,61 +125,104 @@ Slider::Slider(float x, float y, float width, float height, float minValue, floa
     updateValueText();
 }
 
+
+
 void Slider::handleEvent(const sf::Event& event, const sf::RenderWindow& window)
 {
-        if (event.type == sf::Event::MouseButtonPressed)
-        {
-            if (event.mouseButton.button == sf::Mouse::Left)
-            {
-                sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+    if (m_isDisabled)
+    {
+        m_titleText.setFillColor(m_disabledColor);
+        m_background.setFillColor(m_disabledColor);
+        m_handle.setFillColor(m_disabledColor);
 
-                // Check if the knob was clicked
-                if (m_handle.getGlobalBounds().contains(mousePos))
-                {
-                    m_dragging = true;
-                }
+        return;
+    }
+
+    // Get mouse position
+    sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+    sf::Vector2f mousePos = window.mapPixelToCoords(mousePosition);
+    bool mouseHoveringHandle = m_handle.getGlobalBounds().contains(mousePos);
+    bool mouseHoveringBackground = m_background.getGlobalBounds().contains(mousePos);
+
+    // Show hover feedback
+    if (mouseHoveringHandle || mouseHoveringBackground)
+    {
+        m_background.setOutlineThickness(2.f);
+        m_background.setOutlineColor(m_hoverColor);
+        m_titleText.setFillColor(m_hoverColor);
+        m_valueText.setFillColor(m_hoverColor);
+
+        // m_background.setFillColor(m_hoverColor);
+        // m_handle.setFillColor(mouseHoveringHandle ? m_hoverColor : m_handleColor);
+    }
+    else
+    {
+        m_background.setOutlineThickness(0.f);
+        m_background.setOutlineColor(sf::Color::Transparent);
+        m_titleText.setFillColor(m_textColor);
+        m_valueText.setFillColor(m_textColor);
+
+        // m_background.setFillColor(m_backgroundColor);
+        // m_handle.setFillColor(m_handleColor);
+    }
+
+
+    if (event.type == sf::Event::MouseButtonPressed)
+    {
+        if (event.mouseButton.button == sf::Mouse::Left)
+        {
+            sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+            // Check if the knob was clicked
+            if (m_handle.getGlobalBounds().contains(mousePos))
+            {
+                m_dragging = true;
             }
         }
-        if (event.type == sf::Event::MouseButtonReleased)
+    }
+
+    if (event.type == sf::Event::MouseButtonReleased)
+    {
+        if (event.mouseButton.button == sf::Mouse::Left)
         {
-            if (event.mouseButton.button == sf::Mouse::Left)
-            {
-                m_dragging = false;
-            }
+            m_dragging = false;
         }
-        if (event.type == sf::Event::MouseMoved && m_dragging)
-        {
-            sf::Vector2f mouse_position = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+    }
 
-            // Clamp the handle's position to be within the slider background
-            float new_position = m_isHorizontal
-            ? std::clamp(mouse_position.x, m_position.x, m_position.x + m_width)
-            : std::clamp(mouse_position.y, m_position.y, m_position.y + m_height);
-            
-            m_handle.setPosition(m_isHorizontal ? new_position : m_handle.getPosition().x,
-                                 m_isHorizontal ? m_handle.getPosition().y : new_position);
+    if (event.type == sf::Event::MouseMoved && m_dragging)
+    {
+        sf::Vector2f mouse_position = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
-            // Update the value based on the knob's position
-            float handle_position = m_isHorizontal
-            ? (m_handle.getPosition().x - m_position.x)
-            : (m_handle.getPosition().y - m_position.y);
+        // Clamp the handle's position to be within the slider background
+        float new_position = m_isHorizontal
+        ? std::clamp(mouse_position.x, m_position.x, m_position.x + m_width)
+        : std::clamp(mouse_position.y, m_position.y, m_position.y + m_height);
+        
+        m_handle.setPosition(m_isHorizontal ? new_position : m_handle.getPosition().x,
+                                m_isHorizontal ? m_handle.getPosition().y : new_position);
 
-            float normalized_position = m_isHorizontal
-                ? handle_position / m_width
-                : (m_height - handle_position) / m_height;
+        // Update the value based on the knob's position
+        float handle_position = m_isHorizontal
+        ? (m_handle.getPosition().x - m_position.x)
+        : (m_handle.getPosition().y - m_position.y);
 
-            float new_value = m_minValue + normalized_position * (m_maxValue - m_minValue);
+        float normalized_position = m_isHorizontal
+            ? handle_position / m_width
+            : (m_height - handle_position) / m_height;
 
-            // Snap the new value to the nearest step
-            new_value = std::round(new_value / m_step) * m_step;
+        float new_value = m_minValue + normalized_position * (m_maxValue - m_minValue);
 
-            // Ensure the value stays within bounds
-            new_value = std::clamp(new_value, m_minValue, m_maxValue);
+        // Snap the new value to the nearest step
+        new_value = std::round(new_value / m_step) * m_step;
 
-            // Update the handle position again based on the new snapped value
-            m_value = new_value;
-            setValue(m_value);
-        }
+        // Ensure the value stays within bounds
+        new_value = std::clamp(new_value, m_minValue, m_maxValue);
+
+        // Update the handle position again based on the new snapped value
+        m_value = new_value;
+        setValue(m_value);
+    }
+
     updateValueText();
 }
 
@@ -225,8 +276,6 @@ void Slider::updateTitleText()
     }
 
 }
-
-
 void Slider::draw(sf::RenderWindow& window)
 {
     window.draw(m_background);
@@ -235,6 +284,9 @@ void Slider::draw(sf::RenderWindow& window)
     window.draw(m_titleText);
     window.draw(m_valueText);
 }
+
+// setters
+
 void Slider::setValue(float value)
 {
     if(value > m_maxValue) 
@@ -269,7 +321,10 @@ void Slider::setStep(float increment)
     if(increment > 0.0f)
         m_step = increment;
 }
-
+void Slider::setDisabled(bool disabled)
+{
+    m_isDisabled = disabled;
+}
 void Slider::setPosition(sf::Vector2f startPoint, sf::Vector2f endPoint)
 {
     m_position = startPoint;
@@ -307,13 +362,15 @@ void Slider::setPosition(sf::Vector2f startPoint, sf::Vector2f endPoint)
 
         std::cout << m_background.getPosition().x << "  " << m_background.getPosition().y << std::endl;
 
-//        m_handle.setPosition(m_position.x + (m_background.getSize().x / 2), m_position.y + m_height);
+        // m_handle.setPosition(m_position.x + (m_background.getSize().x / 2), m_position.y + m_height);
     }
 
     updateTitleText();
     updateValueText();
 }
 
+
+// getters
 
 float Slider::getValue() const
 {
@@ -330,4 +387,8 @@ float Slider::getMaxValue() const
 bool Slider::isDragging() const
 {
     return m_dragging;
+}
+bool Slider::isDisabled() const
+{
+    return m_isDisabled;
 }

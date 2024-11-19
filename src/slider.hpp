@@ -18,11 +18,13 @@ class Slider
         void setPosition(sf::Vector2f startPoint, sf::Vector2f endPoint);
         void setValue(float value);
         void setStep(float increment);
+        void setDisabled(bool disabled);
 
         float getValue() const;
         float getMinValue() const;
         float getMaxValue() const;
         bool isDragging() const;
+        bool isDisabled() const;
 
     private:
         sf::Vector2f m_position;
@@ -41,8 +43,15 @@ class Slider
         sf::Text m_valueText;    // current value text
         sf::Text m_titleText;
 
+        sf::Color m_handleColor;
+        sf::Color m_backgroundColor;
+        sf::Color m_textColor;
+        sf::Color m_disabledColor;
+        sf::Color m_hoverColor;
+
         bool m_dragging;
         bool m_isHorizontal;
+        bool m_isDisabled;
 
         void updateValueText();
         void updateTitleText();
