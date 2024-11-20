@@ -24,7 +24,6 @@ EnvelopeVisualizer::EnvelopeVisualizer(const Envelope& envelope)
     m_background.setOutlineColor(m_borderColor);
     m_background.setOutlineThickness(smallPadding);
 
-
     // set rect sections of envelope, 
     m_attackRect.setFillColor(sf::Color::Transparent);
     m_decayRect.setFillColor(sf::Color::Transparent);
@@ -34,20 +33,12 @@ EnvelopeVisualizer::EnvelopeVisualizer(const Envelope& envelope)
     positionPhaseRectangles(envelope);
 
     // set dividing lines of rect sections
-    m_phaseDividers.setPrimitiveType(sf::Lines);
     positionPhaseDividers(envelope);
 
     // initialize envelope curves
-    m_attackCurve.setPrimitiveType(sf::LinesStrip);
     generateAttackCurve(envelope);
-
-    m_decayCurve.setPrimitiveType(sf::LinesStrip);
     generateDecayCurve(envelope);
-
-    m_sustainLine.setPrimitiveType(sf::LinesStrip);
     generateSustainLine(envelope);
-
-    m_releaseCurve.setPrimitiveType(sf::LinesStrip);
     generateReleaseCurve(envelope);    
 
     // Initialize envelope indicator
@@ -55,118 +46,23 @@ EnvelopeVisualizer::EnvelopeVisualizer(const Envelope& envelope)
     m_envelopeIndicator.setOrigin(sf::Vector2f(m_envelopeIndicator.getRadius(), m_envelopeIndicator.getRadius()));
     m_envelopeIndicator.setFillColor(m_indicatorColor);    
 
-    // initialize the gauges and their indicators
-    m_xGauge.setFillColor(m_lineColor);
-    
+    // initialize gauges and their indicators
+
+    m_xGauge[0].color = m_lineColor;
+    m_xGauge[1].color = m_indicatorColor;
+    m_xGauge[2].color = m_lineColor;
+
     m_xIndicator.setRadius(smallPadding);
     m_xIndicator.setOrigin(sf::Vector2f(m_xIndicator.getRadius(), m_xIndicator.getRadius()));
     m_xIndicator.setFillColor(m_indicatorColor);
 
-    m_yGauge.setFillColor(m_lineColor);
+    m_yGauge[0].color = m_lineColor;
+    m_yGauge[1].color = m_indicatorColor;
+    m_yGauge[2].color = m_lineColor;
 
     m_yIndicator.setRadius(smallPadding);
     m_yIndicator.setOrigin(sf::Vector2f(m_yIndicator.getRadius(), m_yIndicator.getRadius()));
     m_yIndicator.setFillColor(m_indicatorColor);    
-}
-
-// dusty old constructor 
-EnvelopeVisualizer::EnvelopeVisualizer(const sf::Vector2f& position, const sf::Vector2f& size, const Envelope& envelope)
-: m_position(position)
-, m_size(size)
-{
-    Theme& theme = theme.getInstance();
-
-    float smallPadding = theme.getSmallPadding() / 3.f;
-
-    m_backgroundColor = theme.getBackgroundColor();
-    m_borderColor = theme.getBorderColor();
-    m_rectColor = theme.getAccentColor();
-    m_lineColor = theme.getPrimaryColor();
-    m_indicatorColor = theme.getSecondaryColor();
-
-    // initialize background
-    m_background.setSize(size);
-    m_background.setPosition(m_position);
-    m_background.setFillColor(m_backgroundColor);
-    m_background.setOutlineColor(m_borderColor);
-    m_background.setOutlineThickness(smallPadding);
-
-    // initialize the envelope container
-
-    float rightSide = m_background.getSize().x * (1.f / 13.f);
-    float leftSide = m_background.getSize().x * (11.f / 13.f);
-
-    float topSide = m_background.getSize().y * 0.1f;
-    float bottomSide = m_background.getSize().y * 0.8f;
-
-    m_envelopeContainer.setSize(sf::Vector2f(leftSide - rightSide, bottomSide - topSide));
-    m_envelopeContainer.setPosition(sf::Vector2f(m_background.getPosition().x + rightSide, m_background.getPosition().y + topSide));
-
-    // set rect sections of envelope, 
-    m_attackRect.setFillColor(sf::Color::Transparent);
-    m_decayRect.setFillColor(sf::Color::Transparent);
-    m_sustainRect.setFillColor(sf::Color::Transparent);
-    m_releaseRect.setFillColor(sf::Color::Transparent);
-
-    positionPhaseRectangles(envelope);
-
-    // set dividing lines of rect sections
-    m_phaseDividers.setPrimitiveType(sf::Lines);
-    positionPhaseDividers(envelope);
-
-    // initialize envelope curve(s)
-        // Attack
-    m_attackCurve.setPrimitiveType(sf::LinesStrip);
-    generateAttackCurve(envelope);
-
-        // Decay
-    m_decayCurve.setPrimitiveType(sf::LinesStrip);
-    generateDecayCurve(envelope);
-
-        // Sustain
-    m_sustainLine.setPrimitiveType(sf::LinesStrip);
-    generateSustainLine(envelope);
-
-        // Release
-    m_releaseCurve.setPrimitiveType(sf::LinesStrip);
-    generateReleaseCurve(envelope);    
-
-    // Initialize envelope indicator
-    m_envelopeIndicator.setRadius(smallPadding);
-    m_envelopeIndicator.setOrigin(sf::Vector2f(m_envelopeIndicator.getRadius(), m_envelopeIndicator.getRadius()));
-    m_envelopeIndicator.setPosition(sf::Vector2f(m_background.getPosition().x + rightSide, m_background.getPosition().y + bottomSide));
-    m_envelopeIndicator.setFillColor(m_indicatorColor);    
-
-    // initialize the gauges and their indicators
-
-        // x gauge and indicator
-
-    float yCoord = m_background.getSize().y * 0.9f;
-
-    m_xGauge.setSize(sf::Vector2f(m_envelopeContainer.getSize().x, smallPadding / 2.f));
-    m_xGauge.setOrigin(sf::Vector2f(0.0f, m_xGauge.getSize().y / 2.f ));
-    m_xGauge.setPosition(sf::Vector2f(m_background.getPosition().x + rightSide, m_background.getPosition().y + yCoord));
-    m_xGauge.setFillColor(m_lineColor);
-    
-    m_xIndicator.setRadius(smallPadding);
-    m_xIndicator.setOrigin(sf::Vector2f(m_xIndicator.getRadius(), m_xIndicator.getRadius()));
-    m_xIndicator.setPosition(sf::Vector2f(m_background.getPosition().x + rightSide, m_background.getPosition().y + yCoord));
-    m_xIndicator.setFillColor(m_indicatorColor);
-
-        // y gauge and indicator
-
-    float xCoord = m_background.getSize().x * (12.f / 13.f);
-
-    m_yGauge.setSize(sf::Vector2f(smallPadding / 2.f, m_envelopeContainer.getSize().y));
-    m_yGauge.setOrigin(sf::Vector2f(m_yGauge.getSize().x / 2, 0.0f));
-    m_yGauge.setPosition(sf::Vector2f(m_background.getPosition().x + xCoord, m_background.getPosition().y + topSide));
-    m_yGauge.setFillColor(m_lineColor);
-
-    m_yIndicator.setRadius(smallPadding);
-    m_yIndicator.setOrigin(sf::Vector2f(m_yIndicator.getRadius(), m_yIndicator.getRadius()));
-    m_yIndicator.setPosition(sf::Vector2f(m_background.getPosition().x + xCoord, m_background.getPosition().y + bottomSide));
-    m_yIndicator.setFillColor(m_indicatorColor);
-
 }
 
 EnvelopeVisualizer::~EnvelopeVisualizer() {}
@@ -178,6 +74,7 @@ void EnvelopeVisualizer::update(const Envelope& envelope)
 
     // Position indicators
     updateIndicators(envelope);
+    updateGauges(envelope);
 
     // Position envelope sections
     positionPhaseRectangles(envelope);
@@ -269,7 +166,6 @@ void EnvelopeVisualizer::setPosition(sf::Vector2f position, sf::Vector2f size, c
     m_background.setSize(size);
     m_background.setPosition(m_position);
 
-
     Theme& theme = theme.getInstance();
     float smallPadding = theme.getSmallPadding();
 
@@ -282,28 +178,28 @@ void EnvelopeVisualizer::setPosition(sf::Vector2f position, sf::Vector2f size, c
     m_envelopeContainer.setSize(sf::Vector2f(leftSide - rightSide, bottomSide - topSide));
     m_envelopeContainer.setPosition(sf::Vector2f(m_background.getPosition().x + rightSide, m_background.getPosition().y + topSide));
 
-    positionPhaseRectangles(envelope);
-        
+    positionPhaseRectangles(envelope); 
     positionPhaseDividers(envelope);
     
     m_envelopeIndicator.setPosition(sf::Vector2f(m_background.getPosition().x + rightSide, m_background.getPosition().y + bottomSide));
 
     // x gauge positioning
     float yCoord = m_background.getSize().y * 0.9f;
-    m_xGauge.setSize(sf::Vector2f(m_envelopeContainer.getSize().x, smallPadding / 2.f));
-    m_xGauge.setOrigin(sf::Vector2f(0.0f, m_xGauge.getSize().y / 2.f));
-    m_xGauge.setPosition(sf::Vector2f(m_background.getPosition().x + rightSide, m_background.getPosition().y + yCoord));
 
-    m_xIndicator.setPosition(sf::Vector2f(m_background.getPosition().x + rightSide, m_background.getPosition().y + yCoord));
-    
+    m_xGauge[0].position = sf::Vector2f(m_position.x + rightSide, m_position.y + yCoord);
+    m_xGauge[1].position = sf::Vector2f(m_position.x + rightSide, m_position.y + yCoord);
+    m_xGauge[2].position = sf::Vector2f(m_position.x + leftSide, m_position.y + yCoord);
+
+    m_xIndicator.setPosition(m_xGauge[2].position);
+
     // y gauge positioning
     float xCoord = m_background.getSize().x * (12.f / 13.f);
-    m_yGauge.setSize(sf::Vector2f(smallPadding / 2.f, m_envelopeContainer.getSize().y));
-    m_yGauge.setOrigin(sf::Vector2f(m_yGauge.getSize().x / 2.f, 0.0f));
-    m_yGauge.setPosition(sf::Vector2f(m_background.getPosition().x + xCoord, m_background.getPosition().y + topSide));
 
-    m_yIndicator.setPosition(sf::Vector2f(m_background.getPosition().x + xCoord, m_background.getPosition().y + bottomSide));
+    m_yGauge[0].position = sf::Vector2f(m_position.x + xCoord, m_position.y + bottomSide);
+    m_yGauge[1].position = sf::Vector2f(m_position.x + xCoord, m_position.y + bottomSide);
+    m_yGauge[2].position = sf::Vector2f(m_position.x + xCoord, m_position.y + topSide);
 
+    m_yIndicator.setPosition(m_yGauge[2].position);
 }
 void EnvelopeVisualizer::calculateEnvelopeShape(const Envelope& envelope)
 {
@@ -347,24 +243,35 @@ void EnvelopeVisualizer::updateIndicators(const Envelope& envelope)
 {
     // get current progress of envelope (0.0 - 1.0)
     float progress = envelope.getProgress();
+    float width = m_xGauge[2].position.x - m_xGauge[0].position.x;
 
     // map the x indicator to the xGauge based on progress
-    float xX = m_xGauge.getPosition().x + (progress * m_xGauge.getSize().x);
-    float yX = m_xGauge.getPosition().y;
+    float xX = m_xGauge[0].position.x + (progress * width);
+    float yX = m_xGauge[0].position.y;
     
     m_xIndicator.setPosition(sf::Vector2f(xX, yX));
 
     // get current amplitude of envelope (0.0 - 1.0)
     float amplitude = envelope.getAmplitude();
+    float height = m_yGauge[0].position.y - m_yGauge[2].position.y;
 
     // map the y indicator to the yGauge based on amplitude
-    float xY = m_yGauge.getPosition().x;
-    float yY = m_yGauge.getPosition().y + ((1 - amplitude) * m_yGauge.getSize().y);
+    float xY = m_yGauge[0].position.x;
+    float yY = m_yGauge[2].position.y + ((1 - amplitude) * height);
 
     m_yIndicator.setPosition(sf::Vector2f(xY, yY));
 
     // map the envelope indicator to both to map the envelope shape
     m_envelopeIndicator.setPosition(sf::Vector2f(xX, yY));
+}
+
+void EnvelopeVisualizer::updateGauges(const Envelope& envelope)
+{
+    // set X gauge point
+    m_xGauge[1].position = m_xIndicator.getPosition();
+
+    // set y gauge point
+    m_yGauge[1].position = m_yIndicator.getPosition();
 }
 
 void EnvelopeVisualizer::generateAttackCurve(const Envelope& envelope)

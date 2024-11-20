@@ -27,34 +27,34 @@ class EnvelopeVisualizer
 
         void calculateEnvelopeShape(const Envelope& envelope);
         void updateIndicators(const Envelope& envelope);
+        void updateGauges(const Envelope& envelope);
 
         // visual elements
         sf::RectangleShape m_frame;
         sf::RectangleShape m_background;
 
         // Circle indicator tracks along the rectangle gauge
-        sf::RectangleShape m_xGauge, m_yGauge;
+        sf::VertexArray m_xGauge{sf::LineStrip, 3};
+        sf::VertexArray m_yGauge{sf::LineStrip, 3};
+        
         sf::CircleShape m_xIndicator, m_yIndicator, m_envelopeIndicator;
         sf::Color m_indicatorColor;
 
         sf::RectangleShape m_envelopeContainer;
 
-        // These are displayed behind the envelope lines
-        // Change color during their respective phases
-        // Shows which phase of the envelope is active
         sf::RectangleShape m_attackRect;
         sf::RectangleShape m_decayRect;
         sf::RectangleShape m_sustainRect;
         sf::RectangleShape m_releaseRect;
         void positionPhaseRectangles(const Envelope& envelope);
 
-        sf::VertexArray m_phaseDividers;
+        sf::VertexArray m_phaseDividers{sf::Lines};
         void positionPhaseDividers(const Envelope& envelope);
 
-        sf::VertexArray m_attackCurve;
-        sf::VertexArray m_decayCurve;
-        sf::VertexArray m_sustainLine;
-        sf::VertexArray m_releaseCurve;
+        sf::VertexArray m_attackCurve{sf::LineStrip};
+        sf::VertexArray m_decayCurve{sf::LineStrip};
+        sf::VertexArray m_sustainLine{sf::LineStrip};
+        sf::VertexArray m_releaseCurve{sf::LineStrip};
 
         void generateAttackCurve(const Envelope& envelope);
         void generateDecayCurve(const Envelope& envelope);
